@@ -8,6 +8,10 @@ const morgan = require('morgan');
 const session = require('express-session');
 
 const authController = require('./controllers/auth.js');
+const applicationsController = require('./controllers/applications.js');
+
+const isSignedIn = require('./middleware/is-signed-in.js');
+const passUserToView = require('./middleware/pass-user-to-view.js');
 
 const port = process.env.PORT ? process.env.PORT : '3000';
 
@@ -17,9 +21,10 @@ mongoose.connection.on('connected', () => {
     console.log(`Connected to MongoDB ${mongoose.connection.name}.`);
 });
 
+// express url encoded allows the use of req.body
 app.use(express.urlencoded({ extended: false }));
 app.use(methodOverride('_method'));
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -28,13 +33,24 @@ app.use(
     })
 );
 
+app.use(passUserToView);
+
 app.get('/', (req, res) => {
-    res.render('index.ejs', {
-        user: req.session.user,
+    // Check if the user is signed in
+    if (req.session.user) {
+        // Redirect signed-in users to their applications index
+        res.redirect(`/users/${req.session.user._id}/applications`);
+    } else {
+        // Show the homepage for users who are not signed in
+        res.render('index.ejs');
+    }
     });
-});
 
 app.use('/auth', authController);
+
+//Anything below this line will require a user to be signed in 
+app.use(isSignedIn);
+app.use('/users/:userId/applications', applicationsController);
 
 app.listen(port, () => {
     console.log(`The express app is ready on port ${port}!`);

@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+
+// Creates an EMBEDDED relationship
+// Call this before embedding in the userSchema
 const applicationSchema = new mongoose.Schema({
     company: {
         type: String,
@@ -16,6 +19,7 @@ const applicationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
+        //enum is a type of validation to make sure status one of the options in the array
         enum: ['interested', 'applied', 'interviewing', 'rejected', 'accepted'],
     },
 });
