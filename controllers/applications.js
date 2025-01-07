@@ -8,8 +8,15 @@ const User = require('../models/user.js');
 // we will build out our router logic here
 router.get('/', async (req, res) => {
     try {
-        res.render('applications/index.ejs');
+      // Look up the user from req.session
+        const currentUser = await User.findById(req.session.user._id);
+        // Render index.ejs, passing in all of the current user's
+        // applications as data in the context object.
+        res.render('applications/index.ejs', {
+        applications: currentUser.applications,
+        });
     } catch (error) {
+        // If any errors, log them and redirect back home
         console.log(error);
         res.redirect('/');
     }
